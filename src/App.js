@@ -2,9 +2,10 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import { config } from './config';
 import ProgrammingWheel from './ProgrammingWheel';
+import { Midi } from "@tonejs/midi";
 
 export default class App extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props);
     this.state = {
       selectedFile: null,
@@ -67,40 +68,47 @@ export default class App extends Component {
       }
     };
   }
+
   onChangeHandler = event => {
-    this.setState({
-      selectedFile: event.target.files[0],
-      loaded: 0
-    });
+    const file = event.target.files[0];
+
+    const reader = new FileReader();
+    reader.onload = function () {
+      const array = new Uint8Array(this.result);
+
+      const midi = new Midi(array);
+
+      console.log(midi);
+    };
+    reader.readAsArrayBuffer(file);
+
   };
 
-  onClickHandler = () => {
-    const data = new FormData();
-    data.append('file', this.state.selectedFile);
-    axios
-      .post(config.endpoint.upload, data)
-      .then(res => {
-        // then print response status
-        console.log(res.statusText);
-        this.setState({ result: res.data });
-      })
-      .catch(error => {
-        console.error(error);
-      });
+  onClickHandler = (event) => {
+    const file = event.target.files[0];
+
+    const reader = new FileReader();
+    reader.onload = function () {
+      const array = new Uint8Array(this.result);
+      const binaryString = String.fromCharCode.apply(null, array);
+
+      console.log(binaryString);
+    };
+    reader.readAsArrayBuffer(file);
   };
 
-  render() {
+  render () {
     return (
       <div>
         <form>
-          <input type="file" name="file" onChange={this.onChangeHandler} />
+          <input type="file" name="file" onChange={this.onChangeHandler}/>
           <button type="button" onClick={this.onClickHandler}>
             Upload
           </button>
         </form>
         <a href={process.env.PUBLIC_URL + '/example.mid'}>Example midi file</a>
         {/* <pre>{JSON.stringify(this.state.result, null, 2)}</pre> */}
-        <ProgrammingWheel data={this.state.result} />
+        {/*<ProgrammingWheel data={this.state.result} />*/}
       </div>
     );
   }
